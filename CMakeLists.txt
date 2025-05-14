@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.13.4)
 project(MyLLVMSuperbuild C CXX)
 
+add_compile_options(
+  -fno-semantic-interposition
+)
+
 set(ZLIB_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/llvm/projects/jove/zlib")
 set(ZLIB_USE_STATIC_LIBS ON)
 set(ZLIB_BUILD_EXAMPLES OFF)
