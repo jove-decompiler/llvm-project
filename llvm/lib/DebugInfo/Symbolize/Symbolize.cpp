@@ -601,6 +601,9 @@ LLVMSymbolizer::getOrCreateModuleInfo(const std::string &ModuleName) {
       }
       Context.reset(new PDBContext(*CoffObject, std::move(Session)));
     }
+
+    if (EC)
+      return std::move(EC);
   }
   if (!Context)
     Context = DWARFContext::create(
