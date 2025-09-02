@@ -53,6 +53,10 @@ void ManagedStaticBase::RegisterManagedStatic(void *(*Creator)(),
 }
 
 void ManagedStaticBase::destroy() const {
+#if LLVM_ENABLE_THREADS
+  std::lock_guard<std::recursive_mutex> Lock(*getManagedStaticMutex());
+#endif
+
   assert(DeleterFn && "ManagedStatic not initialized correctly!");
   assert(StaticList == this &&
          "Not destroyed in reverse order of construction?");
@@ -73,6 +77,10 @@ void ManagedStaticBase::destroy() const {
 /// without any other threads executing LLVM APIs.
 /// llvm_shutdown() should be the last use of LLVM APIs.
 void llvm::llvm_shutdown() {
+#if LLVM_ENABLE_THREADS
+  std::lock_guard<std::recursive_mutex> Lock(*getManagedStaticMutex());
+#endif
+
   while (StaticList)
     StaticList->destroy();
 }
