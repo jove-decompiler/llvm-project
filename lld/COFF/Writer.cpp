@@ -977,6 +977,16 @@ void Writer::createSections() {
     sec->addContributingPartialSection(pSec);
   }
 
+  bool Jove = std::any_of(
+      ctx.outputSections.begin(),
+      ctx.outputSections.end(),
+      [](const OutputSection *s) -> bool { return s->name == ".jove"; });
+
+  bool JovePost = std::any_of(
+      ctx.outputSections.begin(),
+      ctx.outputSections.end(),
+      [](const OutputSection *s) -> bool { return s->name == ".jove_po"; });
+
   // Finally, move some output sections to the end.
   auto sectionOrder = [&](const OutputSection *s) {
     // Move DISCARDABLE (or non-memory-mapped) sections to the end of file
@@ -990,6 +1000,20 @@ void Writer::createSections() {
         return 3;
       return 2;
     }
+
+    if (Jove) {
+      if (s->name == ".jove")
+	return -2;
+
+      if (JovePost) {
+	if (s == rsrcSec)
+	  return -1;
+	if (s->name == ".jove_po")
+	  return 0;
+	return 1;
+      }
+    }
+
     // .rsrc should come at the end of the non-discardable sections because its
     // size may change by the Win32 UpdateResources() function, causing
     // subsequent sections to move (see https://crbug.com/827082).
