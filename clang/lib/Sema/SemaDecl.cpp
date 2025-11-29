@@ -2537,10 +2537,30 @@ bool Sema::isIncompatibleTypedef(TypeDecl *Old, TypedefNameDecl *New) {
     return true;
   }
 
+  auto AreSameIntTypes = [&](void) -> bool {
+    if (const BuiltinType *OldBT = OldType->getAs<BuiltinType>()) {
+      if (const BuiltinType *NewBT = NewType->getAs<BuiltinType>()) {
+        if (((OldBT->isUnsignedInteger() &&
+              NewBT->isUnsignedInteger()) ||
+             (OldBT->isSignedInteger() &&
+              NewBT->isSignedInteger())) &&
+            Context.getTypeSize(OldType) == Context.getTypeSize(NewType)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  };
+
   if (OldType != NewType &&
       !OldType->isDependentType() &&
       !NewType->isDependentType() &&
-      !Context.hasSameType(OldType, NewType)) {
+      !Context.hasSameType(OldType, NewType) &&
+      /* we detect if both the old and new types are integrals of the
+         same bit width, and skip the error if so. FIXME This is *not* a
+         standards-conforming change */
+      !AreSameIntTypes()) {
     int Kind = isa<TypeAliasDecl>(Old) ? 1 : 0;
     Diag(New->getLocation(), diag::err_redefinition_different_typedef)
       << Kind << NewType << OldType;
